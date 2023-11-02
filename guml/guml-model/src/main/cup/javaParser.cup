@@ -1,0 +1,391 @@
+package dev.danigpaz.parser.programmingLanguageParsers.java;
+
+import java_cup.runtime.*;
+import dev.danigpaz.parser.ProjectTreeAdapter;
+import dev.danigpaz.parser.ProgrammingLanguageParser;
+import dev.danigpaz.projectTree.concreteProjectTreeNodes.classElementProperties.ModifierType;
+
+class JavaParser;
+
+parser code {:
+
+    private JavaProjectTreeAdapter ptBuilder;
+    private JavaLexer lexer;
+
+    public ProjectTreeAdapter getTreeBuilder() {
+        return ptBuilder;
+    }
+
+    public void setTreeBuilder(ProjectTreeAdapter ptBuilder) {
+        this.ptBuilder = (JavaProjectTreeAdapter) ptBuilder;
+    }
+
+    public void setLexer(JavaLexer lexer) {
+        this.lexer = lexer;
+    }
+
+    public JavaLexer getLexer() {
+        return lexer;
+    }
+:};
+
+terminal String IMPORT, PACKAGE;
+terminal CLASS, INTERFACE, ENUM;
+terminal EXTENDS, IMPLEMENTS, ANNOTATION;
+terminal LBRACE, RBRACE, LPAREN, RPAREN, LBRACKET, RBRACKET, SEMICOLON, COMMA;
+terminal PUBLIC, PRIVATE, PROTECTED, STATIC, FINAL, ABSTRACT, VOLATILE, TRANSIENT, SYNCHRONIZED, NATIVE;
+terminal String CLASSNAME, ATTVALUE, TYPE;
+
+non terminal file, imports, singleImport, classList, javaClass, brackets;
+non terminal header, body, methodHeader, methodBody, bodyContent, bodyEnum;
+non terminal classType, classDeclaration, interfaceList, classHierachy;
+non terminal attribute, method;
+non terminal modifier, modifiers;
+non terminal String type;
+non terminal parameters, parameterList, parameter, bodyEnumTail, bodyArgEnum, bodyArgEnumTail;
+
+precedence left COMMA;
+
+start with file;
+
+file ::=
+              imports classList
+        |     classList
+        ;
+
+////////////////////////////////////////////////////////////////////////////////
+//////////                        DEPENDENCIAS                        //////////
+////////////////////////////////////////////////////////////////////////////////
+
+imports ::=
+              singleImport imports
+        |     singleImport
+        ;
+
+
+singleImport ::=
+              IMPORT:i SEMICOLON {:
+                    String[] importPath = i.split(" ");
+                    String classPath = importPath[importPath.length - 1];
+                    ptBuilder.searchOrCreateClass(classPath);
+                  :}
+        |     PACKAGE:p SEMICOLON {:
+                    String[] packagePath = p.split(" ");
+                    String packageName = packagePath[packagePath.length - 1];
+                    ptBuilder.searchOrCreatePackage(packageName, true);
+                    ptBuilder.addClass();
+                  :}
+        ;
+
+////////////////////////////////////////////////////////////////////////////////
+//////////                           CLASES                           //////////
+////////////////////////////////////////////////////////////////////////////////
+
+classList ::=
+              classList javaClass {:
+                    ptBuilder.addClassToCurrentPackage();
+                  :}
+        |     javaClass {:
+                    ptBuilder.addClassToCurrentPackage();
+                  :}
+        ;
+
+
+javaClass ::=
+              header LBRACE body RBRACE
+        |     header LBRACE RBRACE
+        |     ANNOTATION javaClass
+        ;
+
+
+header ::=
+              classDeclaration CLASSNAME:cn classHierachy {:
+                    ptBuilder.setClassName(cn);
+                    ptBuilder.searchClassOnCurrentPath(cn);
+                  :}
+        |     classDeclaration CLASSNAME:cn {:
+                    ptBuilder.setClassName(cn);
+                    ptBuilder.searchClassOnCurrentPath(cn);
+                  :}
+        ;
+
+
+classDeclaration ::=
+              modifiers classType {:
+                    if (!ptBuilder.getClassName().isEmpty())
+                          ptBuilder.addClass();
+                    ptBuilder.setDeclarationToCurrentClass();
+                    ptBuilder.resetModifiers();
+                  :}
+        |     classType  {:
+                    if (!ptBuilder.getClassName().isEmpty())
+                          ptBuilder.addClass();
+                    ptBuilder.setDeclarationToCurrentClass();
+                    ptBuilder.resetModifiers();
+                  :}
+        ;
+
+
+modifiers ::=
+              modifiers modifier
+        |     modifier
+        ;
+
+
+modifier ::=
+              PUBLIC       {: ptBuilder.addModifier(ModifierType.PUBLIC);       :}
+        |     PROTECTED    {: ptBuilder.addModifier(ModifierType.PROTECTED);    :}
+        |     PRIVATE      {: ptBuilder.addModifier(ModifierType.PRIVATE);      :}
+        |     ABSTRACT     {: ptBuilder.addModifier(ModifierType.ABSTRACT);     :}
+        |     STATIC       {: ptBuilder.addModifier(ModifierType.STATIC);       :}
+        |     FINAL        {: ptBuilder.addModifier(ModifierType.FINAL);        :}
+        |     SYNCHRONIZED {: ptBuilder.addModifier(ModifierType.SYNCHRONIZED); :}
+        |     NATIVE       {: ptBuilder.addModifier(ModifierType.NATIVE);       :}
+        |     VOLATILE     {: ptBuilder.addModifier(ModifierType.VOLATILE);     :}
+        |     TRANSIENT    {: ptBuilder.addModifier(ModifierType.TRANSIENT);    :}
+        ;
+
+
+classType ::=
+              CLASS        {: ptBuilder.isSimpleClass(); :}
+        |     INTERFACE    {: ptBuilder.isInterface();   :}
+        |     ENUM         {: ptBuilder.inEnum = true;
+                              ptBuilder.isEnum();
+                           :}
+        ;
+
+
+classHierachy::=
+              EXTENDS CLASSNAME:cn IMPLEMENTS interfaceList  {:
+                    ptBuilder.addClassSuperClass(cn);
+                  :}
+        |     EXTENDS CLASSNAME:cn  {:
+                    ptBuilder.addClassSuperClass(cn);
+                  :}
+        |     IMPLEMENTS interfaceList
+        ;
+
+
+interfaceList ::=
+              interfaceList COMMA CLASSNAME:cn {:
+                    ptBuilder.addClassInterface(cn);
+                  :}
+        |     CLASSNAME:cn {:
+                    ptBuilder.addClassInterface(cn);
+                  :}
+        ;
+
+
+body ::=
+              bodyContent body
+        |     bodyContent
+        ;
+
+
+
+bodyContent ::=
+              javaClass {:
+                    ptBuilder.addInnerClassToCurrentClass();
+                  :}
+        |     attribute {:
+                    ptBuilder.addAttributeToCurrentClass();
+                  :}
+        |     method  {:
+                    ptBuilder.addMethodToCurrentClass();
+                  :}
+        |     bodyEnum {:
+                    ptBuilder.inEnum = false;
+                  :}
+        |     bodyArgEnum {:
+                    ptBuilder.inEnum = false;
+                  :}
+        |     error:e {:
+                    System.out.println(e + "No valido");
+                  :}
+        ;
+
+
+////////////////////////////////////////////////////////////////////////////////
+//////////                            ENUMS                           //////////
+////////////////////////////////////////////////////////////////////////////////
+
+bodyEnum ::=
+              CLASSNAME:cn COMMA bodyEnumTail {:
+                    ptBuilder.setAttributeName(cn);
+                    ptBuilder.addAttributeToCurrentClass();
+                  :};
+
+
+bodyEnumTail ::=
+              CLASSNAME:cn COMMA bodyEnumTail {:
+                    ptBuilder.setAttributeName(cn);
+                    ptBuilder.addAttributeToCurrentClass();
+                  :}
+        |     CLASSNAME:cn COMMA {:
+                    ptBuilder.setAttributeName(cn);
+                    ptBuilder.addAttributeToCurrentClass();
+                  :}
+        |     CLASSNAME:cn SEMICOLON {:
+                    ptBuilder.setAttributeName(cn);
+                    ptBuilder.addAttributeToCurrentClass();
+                  :}
+        |     CLASSNAME:cn {:
+                    ptBuilder.setAttributeName(cn);
+                    ptBuilder.addAttributeToCurrentClass();
+                  :}
+        ;
+
+
+bodyArgEnum ::=
+              CLASSNAME:cn LPAREN RPAREN COMMA bodyArgEnumTail {:
+                    ptBuilder.setAttributeName(cn);
+                    ptBuilder.addAttributeToCurrentClass();
+                  :}
+         ;
+
+
+bodyArgEnumTail ::=
+              CLASSNAME:cn LPAREN RPAREN COMMA bodyArgEnumTail {:
+                    ptBuilder.setAttributeName(cn);
+                    ptBuilder.addAttributeToCurrentClass();
+                  :}
+        |     CLASSNAME:cn LPAREN RPAREN SEMICOLON {:
+                    ptBuilder.setAttributeName(cn);
+                    ptBuilder.addAttributeToCurrentClass();
+                  :}
+        ;
+
+
+////////////////////////////////////////////////////////////////////////////////
+//////////                          ATRIBUTOS                         //////////
+////////////////////////////////////////////////////////////////////////////////
+
+attribute ::=
+              modifiers type:tp CLASSNAME:cn ATTVALUE:v SEMICOLON {:
+                    ptBuilder.addModifiersToAttribute();
+                    ptBuilder.setAttributeName(cn);
+                    ptBuilder.setAttributeValue(v);
+                    ptBuilder.setAttributeType(tp);
+                    ptBuilder.resetModifiers();
+                  :}
+        |     modifiers type:tp CLASSNAME:cn SEMICOLON {:
+                    ptBuilder.addModifiersToAttribute();
+                    ptBuilder.setAttributeName(cn);
+                    ptBuilder.setAttributeType(tp);
+                    ptBuilder.resetModifiers();
+                  :}
+        |     type:tp CLASSNAME:cn ATTVALUE:v SEMICOLON {:
+                    ptBuilder.setAttributeName(cn);
+                    ptBuilder.setAttributeValue(v);
+                    ptBuilder.setAttributeType(tp);
+                  :}
+        |     type:tp CLASSNAME:cn SEMICOLON {:
+                    ptBuilder.setAttributeName(cn);
+                    ptBuilder.setAttributeType(tp);
+                  :}
+        |     ANNOTATION attribute
+        ;
+
+
+type ::=
+              TYPE:tp               {: RESULT = tp;         :}
+        |     TYPE:tp brackets      {: RESULT = tp + "[]";  :}
+        |     IMPORT:cn             {: RESULT = cn;         :}
+        |     IMPORT:cn brackets    {: RESULT = cn + "[]";  :}
+        |     CLASSNAME:cn          {: RESULT = cn;         :}
+        |     CLASSNAME:cn brackets {: RESULT = cn + "[]";  :}
+        ;
+
+
+brackets ::=
+              LBRACKET RBRACKET brackets
+        |     LBRACKET RBRACKET
+        ;
+
+////////////////////////////////////////////////////////////////////////////////
+//////////                           METODOS                          //////////
+////////////////////////////////////////////////////////////////////////////////
+
+method ::=
+              methodHeader methodBody
+        |     methodHeader SEMICOLON
+        |     ANNOTATION method
+        ;
+
+
+methodHeader ::=
+              modifiers type:tp CLASSNAME:cn parameters {:
+                    if (!(ptBuilder.isAnInterface() || ptBuilder.isAnAbstract())){
+                      lexer.yybegin(lexer.METHODBODY);
+                      ptBuilder.bracketCount++;
+                    }
+                    ptBuilder.addModifiersToMethod();
+                    ptBuilder.resetModifiers();
+                    ptBuilder.setMethodName(cn);
+                    ptBuilder.setMethodReturnType(tp);
+                  :}
+        |     modifiers CLASSNAME:cn parameters {:
+                    if (!(ptBuilder.isAnInterface() || ptBuilder.isAnAbstract())){
+                      lexer.yybegin(lexer.METHODBODY);
+                      ptBuilder.bracketCount++;
+                    }
+                    ptBuilder.addModifiersToMethod();
+                    ptBuilder.resetModifiers();
+                    ptBuilder.setMethodName(cn);
+                  :}
+        |     type:tp CLASSNAME:cn parameters {:
+                    if (!ptBuilder.isAnInterface()){
+                      lexer.yybegin(lexer.METHODBODY);
+                      ptBuilder.bracketCount++;
+                    }
+                    ptBuilder.setMethodName(cn);
+                    ptBuilder.setMethodReturnType(tp);
+                  :}
+        |     CLASSNAME:cn parameters {:
+                    if (!ptBuilder.isAnInterface()){
+                      lexer.yybegin(lexer.METHODBODY);
+                      ptBuilder.bracketCount++;
+                    }
+                    ptBuilder.setMethodName(cn);
+                  :}
+        ;
+
+
+parameters ::=
+              LPAREN RPAREN
+        |     LPAREN parameterList RPAREN
+        ;
+
+
+parameterList ::=
+              parameterList COMMA parameter {:
+                    ptBuilder.addMethodParameter();
+                  :}
+        |     parameter {:
+                    ptBuilder.addMethodParameter();
+                  :};
+
+
+parameter ::=
+              type:tp CLASSNAME:cn  {:
+                    ptBuilder.setAttributeName(cn);
+                    ptBuilder.setAttributeType(tp);
+                  :}
+        |     type:tp {:
+                    ptBuilder.setAttributeType(tp);
+                  :}
+        |     ANNOTATION parameter
+        ;
+
+
+methodBody ::=
+              LBRACE RBRACE
+        ;
+
+
+
+
+
+
+
+
