@@ -87,7 +87,7 @@ space = [" "\t]+
     {className} { return symbol(JavaParserSym.PACKAGE, yytext()); }
 "import"{space}
     {className} { return symbol(JavaParserSym.IMPORT, yytext()); }
-"import"{space}"static "{space}
+"import"{space}"static"{space}
     {className} { return symbol(JavaParserSym.IMPORT, yytext()); }
 "throws"{space}
     ({className}", "?)+ { /* ignore */ }

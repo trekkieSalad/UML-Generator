@@ -113,6 +113,7 @@ public class TreeManager {
             if (node.getType() == DirTreeType.FILE && node.getName().contains(".")) {
                 File file = (File) node;
                 String extension = node.getName().substring(node.getName().lastIndexOf('.'));
+                System.out.println("Parsing file " + file.getName() + " with extension " + extension);
 
                 if (language.matchExtension(extension)) {
                     ProgrammingLanguageParser parser = ParserFactory.createParser(language, file.getContent(), ptBuilder);

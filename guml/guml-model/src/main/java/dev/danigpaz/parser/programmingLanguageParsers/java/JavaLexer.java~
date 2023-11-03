@@ -1006,27 +1006,24 @@ public class JavaLexer implements ProgrammingLanguageLexer, java_cup.runtime.Sca
             // fall through
           case 48: break;
           case 12:
-            { System.out.println("Out { - " + treeBuilder.bracketCount);
-                    if(treeBuilder.bracketCount > 0)
+            { if(treeBuilder.bracketCount > 0)
                         yybegin(METHODBODY);
                     return symbol(JavaParserSym.LBRACE);
             }
             // fall through
           case 49: break;
           case 13:
-            { System.out.println("Out } - " + treeBuilder.bracketCount);
-                    return symbol(JavaParserSym.RBRACE);
+            { return symbol(JavaParserSym.RBRACE);
             }
             // fall through
           case 50: break;
           case 14:
-            { treeBuilder.bracketCount++; System.out.println("In { - " + treeBuilder.bracketCount);
+            { treeBuilder.bracketCount++;
             }
             // fall through
           case 51: break;
           case 15:
-            { treeBuilder.bracketCount--; System.out.println("In } - " + treeBuilder.bracketCount);
-
+            { treeBuilder.bracketCount--;
                     if (treeBuilder.bracketCount == 0) {
                         yybegin(YYINITIAL);
                         return symbol(JavaParserSym.RBRACE);

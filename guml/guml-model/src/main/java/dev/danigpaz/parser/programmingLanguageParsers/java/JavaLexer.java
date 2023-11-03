@@ -117,10 +117,10 @@ public class JavaLexer implements ProgrammingLanguageLexer, java_cup.runtime.Sca
     "\1\0\2\5\2\3\1\5\1\37\1\5\1\0\2\36"+
     "\1\40\2\41\1\42\1\5\2\0\1\43\1\44\1\36"+
     "\1\0\1\41\1\5\1\3\1\36\1\5\1\36\1\45"+
-    "\1\36\2\0";
+    "\1\36\1\0";
 
   private static int [] zzUnpackAction() {
-    int [] result = new int[222];
+    int [] result = new int[221];
     int offset = 0;
     offset = zzUnpackAction(ZZ_ACTION_PACKED_0, offset, result);
     return result;
@@ -172,10 +172,10 @@ public class JavaLexer implements ProgrammingLanguageLexer, java_cup.runtime.Sca
     "\0\u1cee\0\u1d1c\0\u1d4a\0\u1d78\0\u0114\0\u1da6\0\u1dd4\0\u1e02"+
     "\0\u1e30\0\u0114\0\u1e5e\0\212\0\u0114\0\u1e8c\0\u1eba\0\u1ee8"+
     "\0\u0114\0\u0114\0\u1f16\0\u1f44\0\u1f72\0\u1fa0\0\u1ee8\0\u1fce"+
-    "\0\u1ffc\0\u202a\0\u0114\0\u2058\0\u2086\0\u20b4";
+    "\0\u1ffc\0\u202a\0\u0114\0\u2058\0\u2086";
 
   private static int [] zzUnpackRowMap() {
-    int [] result = new int[222];
+    int [] result = new int[221];
     int offset = 0;
     offset = zzUnpackRowMap(ZZ_ROWMAP_PACKED_0, offset, result);
     return result;
@@ -442,13 +442,13 @@ public class JavaLexer implements ProgrammingLanguageLexer, java_cup.runtime.Sca
     "\10\273\1\332\17\273\7\0\1\10\4\0\1\61\1\0"+
     "\1\10\3\0\2\10\2\62\3\10\1\333\24\10\7\0"+
     "\1\273\4\0\1\307\1\0\1\273\3\0\2\273\2\310"+
-    "\2\273\1\334\25\273\6\0\1\335\1\273\4\0\1\307"+
-    "\1\0\1\273\3\0\2\273\2\310\30\273\3\0\1\336"+
-    "\2\0\1\336\52\0\1\336\2\0\1\336\1\273\2\0"+
-    "\1\274\3\0\1\273\3\0\2\273\2\0\30\273\2\0";
+    "\2\273\1\334\25\273\3\0\1\335\2\0\1\335\1\273"+
+    "\4\0\1\307\1\0\1\273\3\0\2\273\2\310\30\273"+
+    "\3\0\1\335\2\0\1\335\1\273\2\0\1\274\3\0"+
+    "\1\273\3\0\2\273\2\0\30\273\2\0";
 
   private static int [] zzUnpackTrans() {
-    int [] result = new int[8418];
+    int [] result = new int[8372];
     int offset = 0;
     offset = zzUnpackTrans(ZZ_TRANS_PACKED_0, offset, result);
     return result;
@@ -495,10 +495,10 @@ public class JavaLexer implements ProgrammingLanguageLexer, java_cup.runtime.Sca
     "\15\1\2\11\4\1\2\11\2\1\2\11\2\1\3\0"+
     "\1\1\1\0\37\1\3\0\34\1\2\11\74\1\1\0"+
     "\5\1\1\0\5\1\1\11\2\1\1\0\7\1\1\0"+
-    "\4\1\1\11\2\1\2\0\3\1\1\0\10\1\2\0";
+    "\4\1\1\11\2\1\2\0\3\1\1\0\10\1\1\0";
 
   private static int [] zzUnpackAttribute() {
-    int [] result = new int[222];
+    int [] result = new int[221];
     int offset = 0;
     offset = zzUnpackAttribute(ZZ_ATTRIBUTE_PACKED_0, offset, result);
     return result;
